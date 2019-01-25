@@ -146,13 +146,22 @@ public:
 			space.assign({3, 7, 11, 15});
 		
 		std::shuffle(space.begin(), space.end(), engine);
-		
+/*	
+		for (int i=0; i<=15; i++){
+			cout<< after(i);
+			if ((i+1)%4 == 0)
+				cout << "\n"; 
+		}
+		cout << "\n"; 
+*/	
 		for (int pos : space) {
 			if (after(pos) != 0) continue;
+			//board::cell tile = popup(engine) ? 1 : 2;
 			if ( tile_array.empty() ){
 				
 				tile_array = {1, 2, 3};
 				std::shuffle(tile_array.begin(), tile_array.end(), engine);
+				//tile_array[tile_array.end()-1];
 				tile = tile_array.back();
 				tile_array.pop_back();
 			}
@@ -160,12 +169,9 @@ public:
 				tile = tile_array.back();
 				tile_array.pop_back();
 			}
-			board tmp = after;
-			tmp.place(pos, tile);
-//			cout << tmp << endl;	
+			
 			return action::place(pos, tile);
 		}
-//		cout << after << endl;
 		return action();
 	}
 
@@ -188,21 +194,27 @@ public:
 	player(const std::string& args = "") : weight_agent(args) {}
 	 
 	virtual action take_action(const board& before) {
+		//std::shuffle(opcode.begin(), opcode.end(), engine);
 		board::reward reward = 0;
-		board::reward max_reward = 0;
+		board::reward max_reward = reward;
 		bool action_flag = false; 
 		
-		
+	//	learning_agent ag_l();
 		flag = true;
 		board tmp;
 		int value, max_value;
-		for (int op=0; op<=3; op++) {	
-				
+		for (int op=0; op<=3; op++) {		
 			tmp = before;
-			reward = tmp.slide(op);			
+			reward = tmp.slide(op);
+			
 			if (reward != -1) {
 				value = 0;	
-
+/*				
+				for (int i=0; i<=15; i++){
+					cout<< tmp(i);
+					if ((i+1)%4 == 0)
+						cout << "\n";
+				}*/
 				for (int i=0; i<8; i++){
 					for (int j=0; j<6; j++){
 						s1.push_back(tmp(j));
@@ -240,16 +252,20 @@ public:
 				if (reward >= max_reward){
 					max_reward = reward;
 					max_value = value;
+					action_flag = true;
 					mv = op;
 				}
-					
-//				cout << "op:" << reward;
 			}
 		}
-////		cout << endl;
+		
+//		cout << "mv:" << mv << "\n";
+		 
+		
+	//	cout << "max_reward:" << max_reward << "\n";
+		
+		
 		if (action_flag){
 			reward_all.push_back(max_reward-max_value);
-			
 			tmp = before;
 			int rr = tmp.slide(mv);
 			if (rr == -1)
@@ -258,7 +274,8 @@ public:
 					if (reward != -1)
 						mv = op;					
 				}
-			tmp2.push_back(tmp);		
+			tmp2.push_back(tmp);
+				
 			return action::slide(mv);
 		}
 		
@@ -267,6 +284,7 @@ public:
 			vector<int> index;
 			for (int j=0; j<reward_all.size(); j++){
 				int pre_value = 0, value = 0;
+				//////////////// 1 /////////////////
 				for (int k=0; k<8; k++){
 					for (int l=0; l<6; l++){
 						s1.push_back(tmp2[tmp2.size()-1-j](l));
@@ -319,6 +337,7 @@ public:
 						vector<int>().swap(s4_prev);
 						tmp2[tmp2.size()-j].rotate(1);
 					}
+		//			cout << "------------------0" << "\n";
 					tmp2[tmp2.size()-1-j].rotate(1);
 										
 					if (k == 3)
@@ -326,15 +345,22 @@ public:
 					if (j != 0 && k == 3)
 						tmp2[tmp2.size()-j].reflect_horizontal();
 				}
+		//		cout << "------------------1" << "\n";
 				tmp2[tmp2.size()-1-j].reflect_horizontal();
 				if (j != 0)
 					tmp2[tmp2.size()-j].reflect_horizontal();
 			
 				
-
+			//	cout << "------------------2" << "\n";
+			/*	cout << reward_all.size() << "\n";
+				cout << index.size() << "\n";
+				cout << pre_value << "\n";
+				cout << value << "\n";
+				cout << net.size() << "\n";*/
 				if (j != 0)
 					for (int i=0; i<4; i++){
 						for (int k=0; k<8; k++){
+			//				cout << k << "\n";
 							net[i][index[4*k+i]] += 0.1/32*(pre_value - value + reward_all[reward_all.size()-j]);
 						}
 
@@ -342,16 +368,18 @@ public:
 				else {
 					for (int i=0; i<4; i++){
 						for (int k=0; k<8; k++){
+			//				cout << k << "\n";
 							net[i][index[4*k+i]] = 0;
 						}
 
 					}
 				}
+			//	cout << "------------------3" << "\n";
 				vector<int>().swap(index);
 			}	
 			vector<board>().swap(tmp2);
 			vector<int>().swap(reward_all);
-			
+//			cout << "game end-------------------\n\n";
 			return action();
 		}
 			
